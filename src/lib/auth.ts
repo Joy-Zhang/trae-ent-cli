@@ -7,6 +7,8 @@ import { error } from '../utils/output.js';
 const DEFAULT_BASE_URL = 'https://console.enterprise.trae.cn';
 const TOKEN_DIR = join(homedir(), '.trae-ent');
 const TOKEN_FILE = join(TOKEN_DIR, 'token.json');
+const DEFAULT_TOKEN_EXPIRE_SECONDS = 7200;
+const TOKEN_REFRESH_ADVANCE_SECONDS = 300;
 
 export function getCredentials(cliOptions: {
   appId?: string;
@@ -52,19 +54,31 @@ export async function getCachedToken(): Promise<TokenCache | null> {
   }
 }
 
-export async function saveToken(token: string, expiresIn: number): Promise<void> {
+export async function clearCachedToken(): Promise<void> {
+  try {
+    await fs.unlink(TOKEN_FILE);
+  } catch {
+  }
+}
+
+export async function saveToken(token: string, expireSeconds: number): Promise<void> {
   await ensureTokenDir();
+  const effectiveExpire = expireSeconds || DEFAULT_TOKEN_EXPIRE_SECONDS;
   const cache: TokenCache = {
     accessToken: token,
-    expiresAt: Date.now() + (expiresIn - 60) * 1000,
+    expiresAt: Date.now() + (effectiveExpire - TOKEN_REFRESH_ADVANCE_SECONDS) * 1000,
   };
   await fs.writeFile(TOKEN_FILE, JSON.stringify(cache, null, 2), { mode: 0o600 });
 }
 
-export async function getAccessToken(credentials: Credentials): Promise<string> {
-  const cached = await getCachedToken();
-  if (cached) {
-    return cached.accessToken;
+export async function getAccessToken(credentials: Credentials, forceRefresh = false): Promise<string> {
+  if (!forceRefresh) {
+    const cached = await getCachedToken();
+    if (cached) {
+      return cached.accessToken;
+    }
+  } else {
+    await clearCachedToken();
   }
 
   const tokenUrl = `${credentials.baseUrl}/openapi/v1/auth/token`;
@@ -88,7 +102,14 @@ export async function getAccessToken(credentials: Credentials): Promise<string> 
     );
   }
 
-  const data = await response.json() as { access_token?: string; expires_in?: number; code?: number; message?: string };
+  const data = await response.json() as {
+    access_token?: string;
+    expire?: number;
+    expires_in?: number;
+    token_type?: string;
+    code?: number;
+    message?: string;
+  };
 
   if (data.code && data.code !== 0) {
     error('AUTH_FAILED', data.message || 'Authentication failed', data);
@@ -98,6 +119,7 @@ export async function getAccessToken(credentials: Credentials): Promise<string> 
     error('AUTH_FAILED', 'No access_token in response', data);
   }
 
-  await saveToken(data.access_token, data.expires_in || 3600);
+  const expireSeconds = data.expire ?? data.expires_in ?? DEFAULT_TOKEN_EXPIRE_SECONDS;
+  await saveToken(data.access_token, expireSeconds);
   return data.access_token;
 }

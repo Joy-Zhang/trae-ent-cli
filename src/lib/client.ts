@@ -2,11 +2,14 @@ import type { Credentials } from './types.js';
 import { getAccessToken } from './auth.js';
 import { error } from '../utils/output.js';
 
+const TOKEN_EXPIRED_CODE = 1002;
+
 interface RequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   path: string;
   body?: any;
   query?: Record<string, any>;
+  retried?: boolean;
 }
 
 export class ApiClient {
@@ -20,9 +23,9 @@ export class ApiClient {
     this.credentials = credentials;
   }
 
-  private async getToken(): Promise<string> {
-    if (!this.accessToken) {
-      this.accessToken = await getAccessToken(this.credentials);
+  private async getToken(forceRefresh = false): Promise<string> {
+    if (forceRefresh || !this.accessToken) {
+      this.accessToken = await getAccessToken(this.credentials, forceRefresh);
     }
     return this.accessToken;
   }
@@ -56,9 +59,20 @@ export class ApiClient {
     return url;
   }
 
+  private isTokenExpiredError(data: any, status: number): boolean {
+    if (status === 401) {
+      return true;
+    }
+    if (status === 200 && typeof data === 'object' && data !== null && data.code === TOKEN_EXPIRED_CODE) {
+      return true;
+    }
+    return false;
+  }
+
   private async requestOnce<T>(options: RequestOptions): Promise<T> {
     await this.rateLimit(options.method);
-    const token = await this.getToken();
+    const forceRefresh = options.retried === true;
+    const token = await this.getToken(forceRefresh);
     const url = this.buildUrl(options.path, options.query);
 
     const headers: Record<string, string> = {
@@ -80,12 +94,7 @@ export class ApiClient {
     if (response.status === 429) {
       const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
       await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      return this.requestOnce(options);
-    }
-
-    if (response.status === 401) {
-      this.accessToken = undefined;
-      return this.requestOnce(options);
+      return this.requestOnce({ ...options });
     }
 
     const contentType = response.headers.get('content-type') || '';
@@ -96,21 +105,26 @@ export class ApiClient {
       data = await response.text();
     }
 
+    if (this.isTokenExpiredError(data, response.status) && !options.retried) {
+      this.accessToken = undefined;
+      return this.requestOnce({ ...options, retried: true });
+    }
+
     if (!response.ok) {
       const errMsg = typeof data === 'object' && data.message ? data.message : `HTTP ${response.status}`;
       const errCode = typeof data === 'object' && data.code ? String(data.code) : `HTTP_${response.status}`;
       error(errCode, errMsg, { status: response.status, data });
     }
 
-    if (typeof data === 'object' && data.code !== undefined && data.code !== 0) {
+    if (typeof data === 'object' && data.code !== undefined && data.code !== 0 && data.code !== TOKEN_EXPIRED_CODE) {
       error(String(data.code), data.message || 'API request failed', data);
     }
 
     return data as T;
   }
 
-  async request<T>(options: RequestOptions): Promise<T> {
-    return this.requestOnce<T>(options);
+  async request<T>(options: Omit<RequestOptions, 'retried'>): Promise<T> {
+    return this.requestOnce<T>({ ...options, retried: false });
   }
 
   async get<T>(path: string, query?: Record<string, any>): Promise<T> {
