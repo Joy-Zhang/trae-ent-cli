@@ -88,3 +88,25 @@ export interface GetLogsParams {
   page?: number;
   pageSize?: number;
 }
+
+export interface UserModelUsageParams {
+  start_time: number;
+  end_time: number;
+  emails?: string[];
+  user_ids?: number[];
+}
+
+export interface ModelUsageDetail {
+  model_name: string;
+  model_type: string;
+  model_source: string;
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+  };
+}
+
+export interface UserModelUsageItem {
+  email: string;
+  model_usage: ModelUsageDetail[];
+}

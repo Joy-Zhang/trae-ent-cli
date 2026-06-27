@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { createContext } from '../lib/context.js';
-import { success } from '../utils/output.js';
+import { success, error } from '../utils/output.js';
 import type { Command as CommanderCommand } from 'commander';
 
 export function registerStatsCommands(program: Command): void {
@@ -51,6 +51,36 @@ export function registerStatsCommands(program: Command): void {
         end_date: options.endDate,
         limit: parseInt(options.limit, 10),
       });
+      success(data);
+    });
+
+  stats
+    .command('user-model-usage')
+    .description('Get model usage consumption for users')
+    .requiredOption('--start-time <ts>', 'Start time (unix seconds timestamp)', parseInt)
+    .requiredOption('--end-time <ts>', 'End time (unix seconds timestamp)', parseInt)
+    .option('--emails <emails>', 'Member emails (comma-separated)')
+    .option('--user-ids <ids>', 'Member IDs (comma-separated)')
+    .action(async (options, cmd: CommanderCommand) => {
+      if (!options.emails && !options.userIds) {
+        error('MISSING_PARAM', 'At least one of --emails or --user-ids is required');
+      }
+
+      const { client } = createContext(cmd.optsWithGlobals());
+
+      const body: Record<string, any> = {
+        start_time: options.startTime,
+        end_time: options.endTime,
+      };
+
+      if (options.emails) {
+        body.emails = options.emails.split(',').map((s: string) => s.trim());
+      }
+      if (options.userIds) {
+        body.user_ids = options.userIds.split(',').map((s: string) => parseInt(s.trim(), 10));
+      }
+
+      const data = await client.post('/openapi/v1/statistics/user-model-usage', body);
       success(data);
     });
 }
