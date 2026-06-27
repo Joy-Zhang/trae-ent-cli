@@ -9,13 +9,13 @@ export function registerStatsCommands(program: Command): void {
     .description('Query usage statistics');
 
   stats
-    .command('active-members')
-    .description('Get active members count')
+    .command('active-users')
+    .description('Get active users statistics')
     .option('--start-date <date>', 'Start date (YYYY-MM-DD)')
     .option('--end-date <date>', 'End date (YYYY-MM-DD)')
     .action(async (options, cmd: CommanderCommand) => {
       const { client } = createContext(cmd.optsWithGlobals());
-      const data = await client.get('/openapi/v1/stats/active-members', {
+      const data = await client.get('/openapi/v1/statistics/active-users', {
         start_date: options.startDate,
         end_date: options.endDate,
       });

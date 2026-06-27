@@ -102,24 +102,36 @@ export async function getAccessToken(credentials: Credentials, forceRefresh = fa
     );
   }
 
-  const data = await response.json() as {
+  interface TokenResponseData {
     access_token?: string;
     expire?: number;
     expires_in?: number;
     token_type?: string;
+  }
+
+  interface TokenResponse {
     code?: number;
     message?: string;
-  };
-
-  if (data.code && data.code !== 0) {
-    error('AUTH_FAILED', data.message || 'Authentication failed', data);
+    data?: TokenResponseData;
+    access_token?: string;
+    expire?: number;
+    expires_in?: number;
   }
 
-  if (!data.access_token) {
-    error('AUTH_FAILED', 'No access_token in response', data);
+  const rawData = await response.json() as TokenResponse;
+
+  if (rawData.code && rawData.code !== 0) {
+    error('AUTH_FAILED', rawData.message || 'Authentication failed', rawData);
   }
 
-  const expireSeconds = data.expire ?? data.expires_in ?? DEFAULT_TOKEN_EXPIRE_SECONDS;
-  await saveToken(data.access_token, expireSeconds);
-  return data.access_token;
+  const tokenData: TokenResponseData & TokenResponse = rawData.data || rawData;
+  const accessToken = tokenData.access_token;
+
+  if (!accessToken) {
+    error('AUTH_FAILED', 'No access_token in response', rawData);
+  }
+
+  const expireSeconds = tokenData.expire ?? tokenData.expires_in ?? DEFAULT_TOKEN_EXPIRE_SECONDS;
+  await saveToken(accessToken, expireSeconds);
+  return accessToken;
 }

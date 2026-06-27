@@ -33,8 +33,19 @@ export interface Member {
   status?: string;
 }
 
+export interface ActiveUsersStats {
+  total_active_users: number;
+  ide_active_users: number;
+  plugin_active_users: number;
+  cli_active_users: number;
+  solo_desktop_code_active_users: number;
+  solo_desktop_work_active_users: number;
+  solo_web_code_active_users: number;
+  solo_web_work_active_users: number;
+}
+
 export interface UsageStats {
-  activeMembers?: number;
+  activeUsers?: ActiveUsersStats;
   aiUsage?: {
     totalTokens?: number;
     totalRequests?: number;
