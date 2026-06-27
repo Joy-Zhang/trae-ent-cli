@@ -1,0 +1,26 @@
+{
+  "name": "trae-ent-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for TRAE Enterprise OpenAPI",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "trae-ent": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts",
+    "test": "node --test --loader ts-node/esm test/**/*.test.ts"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
