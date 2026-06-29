@@ -20,7 +20,7 @@ trae-ent-cli/
 │   ├── index.ts              # CLI 入口点
 │   ├── commands/             # Commander 命令定义（资源导向）
 │   │   ├── members.ts        # 成员管理: invite/list/remove
-│   │   ├── stats.ts          # 数据统计: active-members/ai-usage/mcp-usage
+│   │   ├── statistics.ts     # 数据统计: active-users/ai-usage/mcp-usage/user-model-usage
 │   │   └── logs.ts           # 审计日志: openapi/admin
 │   ├── lib/                  # 核心库
 │   │   ├── auth.ts           # 鉴权 & token 文件缓存
@@ -68,7 +68,7 @@ trae-ent <resource> <action> [options]
 ```bash
 trae-ent members list
 trae-ent members invite user@example.com
-trae-ent stats ai-usage --start-date 2024-01-01
+trae-ent statistics ai-usage --start-date 2024-01-01
 trae-ent logs openapi --page 1
 ```
 

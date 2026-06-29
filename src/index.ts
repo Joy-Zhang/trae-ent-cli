@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import { error, help } from './utils/output.js';
 import { registerMembersCommands } from './commands/members.js';
-import { registerStatsCommands } from './commands/stats.js';
+import { registerStatisticsCommands } from './commands/statistics.js';
 import { registerLogsCommands } from './commands/logs.js';
 
 const program = new Command();
@@ -26,7 +26,7 @@ program
   });
 
 registerMembersCommands(program);
-registerStatsCommands(program);
+registerStatisticsCommands(program);
 registerLogsCommands(program);
 
 async function main() {

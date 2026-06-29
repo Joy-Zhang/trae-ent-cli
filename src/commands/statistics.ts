@@ -3,9 +3,9 @@ import { createContext } from '../lib/context.js';
 import { success, error } from '../utils/output.js';
 import type { Command as CommanderCommand } from 'commander';
 
-export function registerStatsCommands(program: Command): void {
+export function registerStatisticsCommands(program: Command): void {
   const stats = program
-    .command('stats')
+    .command('statistics')
     .description('Query usage statistics');
 
   stats

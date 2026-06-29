@@ -19,9 +19,9 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string 
   });
 }
 
-describe('stats active-users', () => {
+describe('statistics active-users', () => {
   it('should return error when date parameters are missing', async () => {
-    const { stdout } = await runCli(['stats', 'active-users']);
+    const { stdout } = await runCli(['statistics', 'active-users']);
     const result = JSON.parse(stdout);
 
     assert.equal(result.success, false);
@@ -33,7 +33,7 @@ describe('stats active-users', () => {
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const { stdout } = await runCli([
-      'stats',
+      'statistics',
       'active-users',
       '--start-date',
       startDate,

@@ -24,7 +24,7 @@ async function runCli(args: string[]): Promise<{ stdout: string; stderr: string;
   }
 }
 
-describe('stats user-model-usage', () => {
+describe('statistics user-model-usage', () => {
   it('should return error when neither --emails nor --user-ids is provided', async () => {
     const now = Math.floor(Date.now() / 1000);
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
@@ -48,7 +48,7 @@ describe('stats user-model-usage', () => {
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
 
     const { stdout } = await runCli([
-      'stats',
+      'statistics',
       'user-model-usage',
       '--start-time', String(thirtyDaysAgo),
       '--end-time', String(now),
@@ -65,7 +65,7 @@ describe('stats user-model-usage', () => {
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
 
     const { stdout } = await runCli([
-      'stats',
+      'statistics',
       'user-model-usage',
       '--start-time', String(thirtyDaysAgo),
       '--end-time', String(now),
@@ -82,7 +82,7 @@ describe('stats user-model-usage', () => {
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
 
     const { stdout } = await runCli([
-      'stats',
+      'statistics',
       'user-model-usage',
       '--start-time', String(thirtyDaysAgo),
       '--end-time', String(now),
